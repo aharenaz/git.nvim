@@ -6,6 +6,7 @@ local M = {}
 local diff_state = {
   base_bufnr = nil,
   temp_file = nil,
+  temp_file_winnr = nil,
 }
 
 local function on_get_file_content_done(lines)
@@ -17,7 +18,8 @@ local function on_get_file_content_done(lines)
   vim.api.nvim_command("leftabove keepalt vertical diffsplit" .. temp_file)
 
   local buf = vim.api.nvim_get_current_buf()
-  vim.api.nvim_buf_set_name(buf, "~/" .. buf_name)
+  diff_state.temp_file_winnr = vim.api.nvim_get_current_win()
+  vim.api.nvim_buf_set_name(buf, "HEAD:" .. buf_name)
   vim.api.nvim_buf_set_option(buf, "buftype", "nofile")
   vim.api.nvim_buf_set_option(buf, "bufhidden", "delete")
   vim.api.nvim_buf_set_option(buf, "modifiable", false)
@@ -34,8 +36,12 @@ function M.close()
   end
 
   vim.api.nvim_command "diffoff"
+  local win = diff_state.temp_file_winnr
+  if win and vim.api.nvim_win_is_valid(win) then
+    vim.api.nvim_win_close(win, true)
+  end
   vim.api.nvim_command("buffer " .. diff_state.base_bufnr)
-  vim.api.nvim_command "on"
+  vim.wo.diff = false
 end
 
 function M.open(base)
@@ -62,7 +68,7 @@ function M.open(base)
   local file_content_cmd = "git -C "
     .. git_root
     .. string.format(" --literal-pathspecs --no-pager show %s:", base)
-    .. vim.fn.fnamemodify(vim.fn.expand "%", ":~:.")
+    .. fpath:gsub("^" .. git_root .. "/", "")
 
   utils.jobstart(file_content_cmd, on_get_file_content_done)
 end
