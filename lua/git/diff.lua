@@ -6,7 +6,6 @@ local M = {}
 local diff_state = {
   base_bufnr = nil,
   temp_file = nil,
-  temp_file_winnr = nil,
 }
 
 local function on_get_file_content_done(lines)
@@ -18,7 +17,6 @@ local function on_get_file_content_done(lines)
   vim.api.nvim_command("leftabove keepalt vertical diffsplit" .. temp_file)
 
   local buf = vim.api.nvim_get_current_buf()
-  diff_state.temp_file_winnr = vim.api.nvim_get_current_win()
   vim.api.nvim_buf_set_name(buf, "HEAD:" .. buf_name)
   vim.api.nvim_buf_set_option(buf, "buftype", "nofile")
   vim.api.nvim_buf_set_option(buf, "bufhidden", "delete")
@@ -36,11 +34,16 @@ function M.close()
   end
 
   vim.api.nvim_command "diffoff"
-  local win = diff_state.temp_file_winnr
-  if win and vim.api.nvim_win_is_valid(win) then
-    vim.api.nvim_win_close(win, true)
+
+  local buf = diff_state.base_bufnr or vim.api.nvim_get_current_buf()
+
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if buf == vim.api.nvim_win_get_buf(win) then
+      vim.api.nvim_win_close(win, true)
+      break
+    end
   end
-  vim.api.nvim_command("buffer " .. (diff_state.base_bufnr or vim.api.nvim_get_current_buf()))
+  vim.api.nvim_command("buffer " .. buf)
   vim.wo.diff = false
 end
 
