@@ -40,7 +40,7 @@ function M.close()
   if win and vim.api.nvim_win_is_valid(win) then
     vim.api.nvim_win_close(win, true)
   end
-  vim.api.nvim_command("buffer " .. diff_state.base_bufnr)
+  vim.api.nvim_command("buffer " .. (diff_state.base_bufnr or vim.api.nvim_get_current_buf()))
   vim.wo.diff = false
 end
 
@@ -68,7 +68,7 @@ function M.open(base)
   local file_content_cmd = "git -C "
     .. git_root
     .. string.format(" --literal-pathspecs --no-pager show %s:", base)
-    .. fpath:gsub("^" .. git_root .. "/", "")
+    .. fpath:gsub("^" .. git_root:gsub("%-", "%%-") .. "/", "")
 
   utils.jobstart(file_content_cmd, on_get_file_content_done)
 end
