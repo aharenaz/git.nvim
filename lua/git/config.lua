@@ -7,7 +7,6 @@ local default_cfg = {
     blame = "<Leader>gb",
     quit_blame = "q",
     blame_commit = "<CR>",
-    browse = "<Leader>go",
     open_pull_request = "<Leader>gp",
     create_pull_request = "<Leader>gn",
     diff = "<Leader>gd",
