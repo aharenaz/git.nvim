@@ -43,7 +43,9 @@ function M.close()
       break
     end
   end
-  vim.api.nvim_command("buffer " .. buf)
+  if next(vim.fn.getbufinfo(buf)) ~= nil then
+    vim.api.nvim_command("buffer " .. buf)
+  end
   vim.wo.diff = false
 end
 
